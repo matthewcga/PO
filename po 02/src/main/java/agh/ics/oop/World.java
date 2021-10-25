@@ -1,18 +1,25 @@
 package agh.ics.oop;
 
 import static java.lang.System.out;
+import static agh.ics.oop.MoveDirection.*;
 
 public class World {
     public static void main(String[] args){
-        Vector2d position1 = new Vector2d(1,2);
-        out.println(position1);
-        Vector2d position2 = new Vector2d(-2,1);
-        out.println(position2);
-        out.println(position1.add(position2));
-        /////////////////////////////////////////////////
-        out.println(MapDirection.NORTH.toString());
-        out.println(MapDirection.NORTH.next().toString());
-        out.println(MapDirection.NORTH.previous().toString());
-        out.println(MapDirection.NORTH.toUnitVector().toString());
+        var animal1 = new Animal();
+        //out.println(animal1.toString());
+
+        var actions1 = new MoveDirection[]{RIGHT, FORWARD, FORWARD, FORWARD};
+        for (MoveDirection action : actions1) {
+            animal1.move(action);
+            //out.println(animal1.toString());
+        }
+
+        var animal2 = new Animal();
+        out.println(animal2.toString());
+        var actions2 = new OptionsParser().parse(new String[]{"f", "f", "f", "b", "c", "f", "f", "l", "l"});
+        for (MoveDirection action : actions2) {
+            animal1.move(action);
+            out.println(animal1.toString());
+        }
     }
 }

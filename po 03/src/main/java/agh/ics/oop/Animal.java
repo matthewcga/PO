@@ -13,22 +13,20 @@ public class Animal {
     { return "direction: " + this.direction.toString() + ", position: " + this.position.toString(); }
 
     public void move(MoveDirection direction) {
-        var newPosition = new Vector2d(0, 0);
-        final boolean checker = newPosition.x <= 4 && newPosition.x >= 0 && newPosition.y <= 4 && newPosition.y >= 0;
-
         switch (direction) {
             case FORWARD -> {
-                newPosition = this.position.add(this.direction.toUnitVector());
-                if (checker) this.position = newPosition;
+                var newPosition = this.position.add(this.direction.toUnitVector());
+                if (moveValidation(newPosition)) this.position = newPosition;
             }
             case BACKWARD -> {
-                newPosition = this.position.add(this.direction.toUnitVector().opposite());
-                if (checker) this.position = newPosition;
+                var newPosition = this.position.add(this.direction.toUnitVector().opposite());
+                if (moveValidation(newPosition)) this.position = newPosition;
             }
             case RIGHT -> this.direction = this.direction.next();
             case LEFT -> this.direction = this.direction.previous();
         }
     }
 
-
+    public Boolean moveValidation(Vector2d v)
+    { return v.x <= 4 && v.x >= 0 && v.y <= 4 && v.y >= 0; }
 }

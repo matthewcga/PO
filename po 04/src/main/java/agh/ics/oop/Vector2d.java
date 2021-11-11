@@ -5,8 +5,7 @@ import static java.lang.Math.*;
 public class Vector2d {
         public final int x, y;
 
-        public Vector2d(int x, int y)
-        { this.x = x; this.y = y; }
+        public Vector2d(int x, int y) { this.x = x; this.y = y; }
 
         public String toString() { return "(" + this.x + "," + this.y + ")"; }
 

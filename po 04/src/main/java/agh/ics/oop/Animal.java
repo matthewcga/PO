@@ -5,11 +5,6 @@ public class Animal {
     private Vector2d position;
     private IWorldMap map;
 
-//    public Animal() {
-//        this.direction = MapDirection.NORTH;
-//        this.position = new Vector2d(2, 2);
-//    }
-
     public Animal(IWorldMap map) {
         this.direction = MapDirection.NORTH;
         this.position = new Vector2d(2, 2);
@@ -22,21 +17,22 @@ public class Animal {
         this.map = map;
     }
 
-    public String toString()
-    { return this.direction.toString(); }
+    public String toString() { return this.direction.toString(); }
 
     public void move(MoveDirection direction) {
         switch (direction) {
             case FORWARD -> {
-                var newPosition = this.position.add(this.direction.toUnitVector());
-                if (this.map.canMoveTo(newPosition)) this.position = newPosition;
+                var newPosition = position.add(this.direction.toUnitVector());
+                if (map.canMoveTo(newPosition)) position = newPosition;
             }
             case BACKWARD -> {
-                var newPosition = this.position.add(this.direction.toUnitVector().opposite());
-                if (this.map.canMoveTo(newPosition)) this.position = newPosition;
+                var newPosition = position.add(this.direction.toUnitVector().opposite());
+                if (map.canMoveTo(newPosition)) position = newPosition;
             }
             case RIGHT -> this.direction = this.direction.next();
             case LEFT -> this.direction = this.direction.previous();
         }
     }
+
+    public Vector2d getPosition() { return position; }
 }

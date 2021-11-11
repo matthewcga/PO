@@ -5,7 +5,7 @@ import java.util.List;
 
 public class OptionsParser {
 
-    public List<MoveDirection> parse(String[] input) {
+    public MoveDirection[] parse(String[] input) {
         List<MoveDirection> output = new ArrayList<MoveDirection>();
         for (String i : input)
             switch (i) {
@@ -15,6 +15,6 @@ public class OptionsParser {
                 case "l": output.add(MoveDirection.LEFT); break;
                 default: break;
             }
-        return output;
+        return output.toArray(new MoveDirection[output.size()]);
     }
 }

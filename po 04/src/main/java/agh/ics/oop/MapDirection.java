@@ -5,10 +5,10 @@ public enum MapDirection {
 
     public String toString() {
         return switch (this) {
-            case NORTH -> "N";
-            case SOUTH -> "S";
-            case WEST -> "W";
-            case EAST -> "E";
+            case NORTH -> "^";
+            case SOUTH -> "v";
+            case WEST -> "<";
+            case EAST -> ">";
         };
     }
 
@@ -32,10 +32,10 @@ public enum MapDirection {
 
     public Vector2d toUnitVector() {
         return switch (this) {
-            case NORTH -> new Vector2d(1, 0);
-            case EAST -> new Vector2d(0, 1);
-            case SOUTH -> new Vector2d(-1, 0);
-            case WEST -> new Vector2d(0, -1);
+            case NORTH -> new Vector2d(0, 1);
+            case EAST -> new Vector2d(1, 0);
+            case SOUTH -> new Vector2d(0, -1);
+            case WEST -> new Vector2d(-1, 0);
         };
     }
 }

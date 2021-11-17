@@ -19,7 +19,7 @@ public class SimulationEngine implements IEngine{
             animal.move(move);
             positions[counter] = animal.getPosition();
             counter = (counter + 1) % positions.length;
-            System.out.print(map);
+            // System.out.print(map);
         }
     }
     

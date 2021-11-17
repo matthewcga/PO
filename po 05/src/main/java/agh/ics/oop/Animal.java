@@ -17,8 +17,6 @@ public class Animal {
         this.map = map;
     }
 
-    public String toString() { return this.direction.toString(); }
-
     public void move(MoveDirection direction) {
         switch (direction) {
             case FORWARD -> {
@@ -33,6 +31,8 @@ public class Animal {
             case LEFT -> this.direction = this.direction.previous();
         }
     }
+
+    public String toString() { return this.direction.toString(); }
 
     public Vector2d getPosition() { return position; }
 }

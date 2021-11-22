@@ -22,7 +22,7 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
 
     public boolean isOccupied(Vector2d position) { return objects.containsKey(position); }
 
-    public Object objectAt(Vector2d position) { return objects.get(position); } // assumes correct position is given
+    public Object objectAt(Vector2d position) { return (isOccupied(position))? objects.get(position) : null; }
 
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition) { // assumes correct position is given
         Object object = objectAt(oldPosition);

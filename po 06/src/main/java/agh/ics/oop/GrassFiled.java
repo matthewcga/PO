@@ -1,9 +1,8 @@
 package agh.ics.oop;
 
-import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Random;
 
 public class GrassFiled extends AbstractWorldMap {
@@ -15,7 +14,7 @@ public class GrassFiled extends AbstractWorldMap {
         grassRange = (int)sqrt(quantity * 10);
         lowerLeft = new Vector2d(0, 0);
         upperRight = new Vector2d (0, 0);
-        objects = new LinkedHashMap<>();
+        objects = new HashMap<>();
         rand = new Random();
 
         for (int i = 0; i < quantity; i++) {
@@ -43,13 +42,14 @@ public class GrassFiled extends AbstractWorldMap {
     }
 
     public void eat(Vector2d position) {
-        objects.remove(position);
         while (true) {
             var newPosition = new Vector2d(rand.nextInt(grassRange), rand.nextInt(grassRange));
             if (!isOccupied(newPosition)) {
                 objects.put(newPosition, new Grass(newPosition));
                 updateUpperRight(newPosition);
+                break;
             }
         }
+        objects.remove(position);
     }
 }

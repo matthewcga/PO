@@ -3,9 +3,9 @@ package agh.ics.oop;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Animal {
-    private MapDirection direction;
+public class Animal{
     private Vector2d position;
+    private MapDirection direction;
     private IWorldMap map;
     private List<IPositionChangeObserver> observers;
 
@@ -20,20 +20,20 @@ public class Animal {
         switch (direction) {
             case FORWARD -> {
                 var newPosition = position.add(this.direction.toUnitVector());
-                if (map.canMoveTo(newPosition)) { positionChanged(position, newPosition); position = newPosition; }
+                if (map.canMoveTo(newPosition)) updatePosition(newPosition);
             }
             case BACKWARD -> {
                 var newPosition = position.add(this.direction.toUnitVector().opposite());
-                if (map.canMoveTo(newPosition)) { positionChanged(position, newPosition); position = newPosition; }
+                if (map.canMoveTo(newPosition)) updatePosition(newPosition);
             }
             case RIGHT -> this.direction = this.direction.next();
             case LEFT -> this.direction = this.direction.previous();
         }
     }
 
-    public String toString() { return this.direction.toString(); }
+    public Vector2d getPosition() { return this.position; }
 
-    public Vector2d getPosition() { return position; }
+    public String toString() { return this.direction.toString(); }
 
     public void addObserver(IPositionChangeObserver observer) { observers.add(observer); }
 
@@ -41,4 +41,10 @@ public class Animal {
 
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition)
     { for (var observer : observers) observer.positionChanged(oldPosition, newPosition); }
+
+    public void updatePosition(Vector2d newPosition) {
+        var oldPosition = position;
+        position = newPosition;
+        positionChanged(oldPosition, newPosition);
+    }
 }

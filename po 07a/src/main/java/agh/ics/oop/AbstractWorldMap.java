@@ -2,7 +2,7 @@ package agh.ics.oop;
 
 import java.util.Map;
 
-public abstract class AbstractWorldMap implements IWorldMap , IPositionChangeObserver {
+public abstract class AbstractWorldMap implements IWorldMap , IPositionChangeObserver, IAppHelper {
     protected Map<Vector2d, Object> objects;
     protected Vector2d upperRight;
     protected Vector2d lowerLeft;

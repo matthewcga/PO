@@ -6,8 +6,6 @@ public class MapBoundary implements IPositionChangeObserver {
     SortedSet<Vector2d> sortedX = new TreeSet<>(new ComparatorX());
     SortedSet<Vector2d> sortedY = new TreeSet<>(new ComparatorY());
 
-    public MapBoundary() { }
-
     public void place(Vector2d position) { this.sortedX.add(position); this.sortedY.add(position); }
 
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition) {

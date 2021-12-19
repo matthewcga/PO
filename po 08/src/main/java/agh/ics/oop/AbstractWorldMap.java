@@ -1,5 +1,7 @@
 package agh.ics.oop;
 
+import javafx.application.Application;
+
 import java.util.Map;
 
 public abstract class AbstractWorldMap implements IWorldMap , IPositionChangeObserver, IAppHelper {
@@ -7,7 +9,7 @@ public abstract class AbstractWorldMap implements IWorldMap , IPositionChangeObs
     protected Vector2d upperRight;
     protected Vector2d lowerLeft;
     protected MapVisualizer mapVisualizer = new MapVisualizer(this);
-    public MapBoundary mapBounder = new MapBoundary();
+    protected MapBoundary mapBounder = new MapBoundary();
 
     public boolean place(Animal animal) throws IllegalArgumentException {
         if (!this.canMoveTo(animal.getPosition())) throw new IllegalArgumentException("nie mozna dodac objektu na zajete pole: " + animal.getPosition());

@@ -17,11 +17,12 @@ public class OptionsParser {
     }};
 
     public MoveDirection[] parse(String[] input) throws IllegalArgumentException {
-        List<MoveDirection> output = new ArrayList<MoveDirection>();
-        for (String i : input)
-            if (dict.containsKey(i)) output.add(dict.get(i));
-            else throw new IllegalArgumentException("'" + i + "' nie jest poprawnym argumentem!");
-
+        List<MoveDirection> output = new ArrayList<MoveDirection>(); String j;
+        for (String i : input) {
+            j = i.trim();
+            if (dict.containsKey(j)) output.add(dict.get(j));
+            else throw new IllegalArgumentException("'" + j + "' nie jest poprawnym argumentem!");
+        }
         return output.toArray(new MoveDirection[output.size()]);
     }
 }

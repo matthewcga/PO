@@ -1,14 +1,12 @@
 package agh.ics.oop;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ListDictionary<K, T> {
-    protected Map<K, List<T>> dict;
+    protected Map<K, HashSet<T>> dict;
 
-    ListDictionary() { dict = new HashMap<K, List<T>>(); }
+    ListDictionary() { dict = new HashMap<K, HashSet<T>>(); }
 
     public void put(K key, T value) {
         if (dict.containsKey(key)) {
@@ -17,19 +15,29 @@ public class ListDictionary<K, T> {
             dict.replace(key, list);
         }
         else {
-            var list = new ArrayList<T>();
+            var list = new HashSet<T>();
             list.add(value);
             dict.put(key, list);
         }
     }
 
-    public List<T> get(K key) { return dict.getOrDefault(key, new ArrayList<T>()); }
+    public HashSet<T> get(K key) { return dict.getOrDefault(key, new HashSet<T>()); }
 
     public boolean containsKey(K key) { return dict.containsKey(key); }
 
     public void remove(K key, T value) {
         var list = dict.get(key);
         list.remove(value);
-        dict.replace(key, list);
+        if (!list.isEmpty()) dict.replace(key, list);
+        else dict.remove(key);
     }
+
+    public List<T> values() {
+        List<T> output = new LinkedList<T>();
+        Collection<HashSet<T>> lists= dict.values();
+        for (HashSet<T> list : lists) output.addAll(list);
+        return output;
+    }
+
+    public Set<K> keys() { return dict.keySet(); }
 }

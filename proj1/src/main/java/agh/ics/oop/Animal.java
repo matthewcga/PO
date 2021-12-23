@@ -1,9 +1,6 @@
 package agh.ics.oop;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Animal{
     private final Random rand = new Random();
@@ -14,7 +11,6 @@ public class Animal{
     private int energy;
     private int age = 0;
     private int kids = 0;
-    private boolean isAlive = true;
     private List<IPositionChangeObserver> observers;
 
     public Animal(GrassFiled wm, Vector2d initialPosition, int initialEnergy) {
@@ -29,12 +25,12 @@ public class Animal{
         Arrays.sort(genes);
     }
 
-    public Animal(GrassFiled wm, Animal ma, Animal pa, int initialEnergy) {
+    public Animal(GrassFiled wm, Animal ma, Animal pa) {
         direction = rand.nextInt(8);
         position = ma.getPosition();
         map = wm;
-        observers = new ArrayList<>();
-        energy = initialEnergy;
+        observers = ma.getObservers();
+        energy = ma.makeChild() + pa.makeChild();
 
         genes = new int[32];
         if (rand.nextBoolean()) {
@@ -52,21 +48,30 @@ public class Animal{
 
     public void move() {
         var newDirection = this.genes[rand.nextInt(32)];
-        if (newDirection == 0 || newDirection == 4) updatePosition(map.fixVector(position.pushVector(direction)));
+        if (newDirection == 0 || newDirection == 4) {
+            updatePosition(map.fixVector(position.pushVector(direction)));
+            energy -= 5;
+        }
         direction = (direction + newDirection) % 8; energy--; age++;
     }
 
     public void eat(int plant) { energy += plant; }
-    public void makeChild() { energy = (int)(energy * 0.75); kids++; }
+    public int makeChild() {
+        kids++;
+        int energyForKid = (int)(energy * 0.25);
+        energy = (int)(energy * 0.75);
+        return energyForKid;
+    }
     public int getDirection() { return direction; }
     public Vector2d getPosition() { return position; }
     public int getEnergy() { return energy; }
+    public void addEnergy(int e) { energy += e; }
     public int[] getGenes() {return genes; }
-    public void kys() { isAlive = false;}
     public int getAge() {
         return age;
     }
     public int getKids() { return kids; }
+    public List<IPositionChangeObserver> getObservers() { return observers; }
     public void addObserver(IPositionChangeObserver observer) { observers.add(observer); }
     public void rmObserver(IPositionChangeObserver observer) { observers.remove(observer); }
 

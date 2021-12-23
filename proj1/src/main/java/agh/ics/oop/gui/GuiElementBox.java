@@ -23,12 +23,10 @@ import java.io.FileNotFoundException;
 public class GuiElementBox {
     public VBox vb;
 
-    public GuiElementBox(String str, Image image) {
-        Label label = new Label(str);
+    public GuiElementBox(Image image) {
         ImageView iv = new ImageView(image);
-        iv.setFitWidth(10);
-        iv.setFitHeight(10);
-        this.vb = new VBox(iv, label);
+        iv.setFitWidth(20); iv.setFitHeight(20);
+        this.vb = new VBox(iv);
         this.vb.setAlignment(Pos.CENTER);
     }
 

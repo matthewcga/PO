@@ -1,12 +1,11 @@
 package agh.ics.oop;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ListDictionary<K, T> {
     protected Map<K, HashSet<T>> dict;
 
-    ListDictionary() { dict = new HashMap<K, HashSet<T>>(); }
+    ListDictionary() { dict = new HashMap<>(); }
 
     public void put(K key, T value) {
         if (dict.containsKey(key)) {
@@ -21,7 +20,7 @@ public class ListDictionary<K, T> {
         }
     }
 
-    public HashSet<T> get(K key) { return dict.getOrDefault(key, new HashSet<T>()); }
+    public HashSet<T> get(K key) { return dict.getOrDefault(key, new HashSet<>()); }
 
     public boolean containsKey(K key) { return dict.containsKey(key); }
 
@@ -33,7 +32,7 @@ public class ListDictionary<K, T> {
     }
 
     public List<T> values() {
-        List<T> output = new LinkedList<T>();
+        List<T> output = new LinkedList<>();
         Collection<HashSet<T>> lists= dict.values();
         for (HashSet<T> list : lists) output.addAll(list);
         return output;

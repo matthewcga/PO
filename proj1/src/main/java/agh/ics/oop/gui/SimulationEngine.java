@@ -1,8 +1,6 @@
 package agh.ics.oop.gui;
 
 import agh.ics.oop.*;
-import agh.ics.oop.gui.App;
-import javafx.scene.control.Button;
 import javafx.scene.control.ToggleButton;
 
 import java.io.BufferedWriter;
@@ -10,13 +8,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.chrono.ChronoLocalDateTime;
 import java.util.*;
 import javax.swing.JFileChooser;
 
-public class SimulationEngine implements IEngine, Runnable{
+public class SimulationEngine implements Runnable{
     private GrassFiled map;
     private IPositionChangeObserver observer;
     private int delay;
@@ -33,19 +28,30 @@ public class SimulationEngine implements IEngine, Runnable{
     public int animalsCountSum, grassCountSum;
     public float avgEngSum, avgAgeOfDeathSum, avgKidsSum;
 
-    Settings setting = new Settings();
+    public String name;
 
-    public SimulationEngine(GrassFiled gf, IPositionChangeObserver obs, ToggleButton butt) {
-        map = gf; observer = obs; delay = setting.delay; button = butt; animalEnergy = setting.initAnimalEnergy;
-        for (int i = 0; i < setting.initAnimalCount; i++)
-            map.place(new Animal(this.map, new Vector2d(rand.nextInt(this.map.upperRight.x), rand.nextInt(this.map.upperRight.y))));
+    AppSettings.Settings settings;
+
+    public SimulationEngine(String mapName, GrassFiled gf, IPositionChangeObserver obs, ToggleButton butt) {
+        name = mapName; map = gf; observer = obs; delay = settings.delay; button = butt; animalEnergy = settings.initAnimalEnergy;
+
+        for (int i = 0; i < settings.initAnimalCount; i++) {
+            int failCount = 0;
+            while (failCount < 30) {
+                Vector2d newPosition = new Vector2d(rand.nextInt(this.map.upperRight.x), rand.nextInt(this.map.upperRight.y));
+                if (!map.isOccupied(newPosition)) {
+                    map.place(new Animal(this.map, newPosition));
+                    break;
+                }
+                failCount++;
+            }
+        }
     }
 
     @Override
     public void run() {
         while (button.isSelected()) {
             day++;
-            //Set<Vector2d> positions = new HashSet<>();
             map.growGrass();
             map.eatGrassMakeKids();
             map.killDead(day);
@@ -93,7 +99,7 @@ public class SimulationEngine implements IEngine, Runnable{
 
         File dir = j.getSelectedFile();
         String currentDate = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-        String fileName = dir.getPath() + "\\symulacja_" + currentDate + ".csv";
+        String fileName = dir.getPath() + "\\" + name + "_symulacja_" + currentDate + ".csv";
         BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
         writer.write(data.toString());
         writer.close();

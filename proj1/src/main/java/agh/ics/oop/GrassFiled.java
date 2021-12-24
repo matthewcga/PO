@@ -16,7 +16,7 @@ public class GrassFiled implements IPositionChangeObserver {
 
     protected int deadCount = 0, deadAgeSum = 0, aliveEngSum, aliveChildSum;
 
-    Settings settings = new Settings();
+    AppSettings.Settings settings;
 
     public GrassFiled(boolean border, boolean magic) {
         upperRight = new Vector2d(settings.mapSize, settings.mapSize);
@@ -26,7 +26,8 @@ public class GrassFiled implements IPositionChangeObserver {
         animals = new ListDictionary<>();
         grassEnergySetting = settings.grassEnergy;
         grass = new HashMap<>();
-        for(int i = 0; i < 10; i++) growGrass();
+
+        for(int i = 0; i < settings.initAnimalCount / 2; i++) growGrass();
     }
 
     public boolean place(Animal animal) {

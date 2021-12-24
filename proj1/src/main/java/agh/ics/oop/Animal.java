@@ -18,7 +18,7 @@ public class Animal{
     private List<Animal> kids = new ArrayList();
     private int dayOfDeath;
 
-    Settings settings = new Settings();
+    AppSettings.Settings settings;
 
     public Animal(GrassFiled wm, Vector2d initialPosition) {
         direction = rand.nextInt(8);
@@ -66,9 +66,9 @@ public class Animal{
         var newDirection = this.genes[rand.nextInt(32)];
         if (newDirection == 0 || newDirection == 4) {
             updatePosition(map.fixVector(position.pushVector(direction)));
-            energy -= 5;
+            energy -= settings.energyLoss;
         }
-        direction = (direction + newDirection) % 8; energy--; age++;
+        direction = (direction + newDirection) % 8; age++;
     }
 
     public int makeChild() {

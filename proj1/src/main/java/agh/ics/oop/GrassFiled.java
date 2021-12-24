@@ -12,17 +12,19 @@ public class GrassFiled implements IPositionChangeObserver {
     protected Vector2d lowerLeftJungle;
     protected int grassEnergySetting;
     //protected MapBoundary mapBounder = new MapBoundary();
-    protected boolean hasBorder;
+    protected boolean hasBorder, magicRuleOn;
 
     protected int deadCount = 0, deadAgeSum = 0, aliveEngSum, aliveChildSum;
 
-    public GrassFiled(int mapSize, int jungelSize, boolean border, int grassEnergy) {
-        upperRight = new Vector2d(mapSize, mapSize);
-        lowerLeftJungle = new Vector2d((mapSize - jungelSize) / 2, (mapSize - jungelSize) / 2);
-        upperRightJungle = new Vector2d((mapSize + jungelSize) / 2, (mapSize + jungelSize) / 2);
-        hasBorder = border;
+    Settings settings = new Settings();
+
+    public GrassFiled(boolean border, boolean magic) {
+        upperRight = new Vector2d(settings.mapSize, settings.mapSize);
+        lowerLeftJungle = new Vector2d((settings.mapSize - settings.jungleSize) / 2, (settings.mapSize - settings.jungleSize) / 2);
+        upperRightJungle = new Vector2d((settings.mapSize + settings.jungleSize) / 2, (settings.mapSize + settings.jungleSize) / 2);
+        hasBorder = border; magicRuleOn = magic;
         animals = new ListDictionary<>();
-        grassEnergySetting = grassEnergy;
+        grassEnergySetting = settings.grassEnergy;
         grass = new HashMap<>();
         for(int i = 0; i < 10; i++) growGrass();
     }
@@ -120,22 +122,23 @@ public class GrassFiled implements IPositionChangeObserver {
     public String getBestGenome() {
         List<Animal> aliveAnimals =  getAnimals();
         Map<String, Integer> genoms = new HashMap<>();
-
         int topScore = 0; String topGenome = "brak";
+
+        if (aliveAnimals.size() == 0) return "wszystkie zwierzatka nie zyja!";
 
         for (Animal a : aliveAnimals) {
             String g = Arrays.toString(a.getGenes());
             if (genoms.containsKey(g)) {
-                int score = genoms.get(g);
+                int score = genoms.get(g) + 1;
                 if (score > topScore) { topScore = score; topGenome = g; }
-                genoms.replace(g, score + 1);
+                genoms.replace(g, score);
             }
             else genoms.put(g, 1);
         }
-        return topGenome + ", wystapil " + topScore + " razy";
+        return (topScore != 0)? topGenome : genoms.keySet().iterator().next();
     }
 
-    public void killDead() {
+    public void killDead(int day) {
         aliveEngSum = 0; aliveChildSum = 0;
         Queue<Vector2d> positions = new LinkedList<>(animals.keys());
         while (!positions.isEmpty()) {
@@ -144,10 +147,10 @@ public class GrassFiled implements IPositionChangeObserver {
             while (!animalsQueue.isEmpty()) {
                 Animal animal = animalsQueue.poll();
                 if (animal.getEnergy() <= 0) {
-                    deadCount++; deadAgeSum += animal.getAge();
+                    deadCount++; deadAgeSum += animal.getAge(); animal.die(day);
                     animals.remove(position, animal);
                 }
-                else { aliveEngSum += animal.getEnergy(); aliveChildSum += animal.getKids(); }
+                else { aliveEngSum += animal.getEnergy(); aliveChildSum += animal.getKidsCount(); }
             }
         }
     }
@@ -161,8 +164,12 @@ public class GrassFiled implements IPositionChangeObserver {
                  Arrays.sort(animalsAtPosition, (a1, a2) -> (int)Math.signum(a1.getEnergy() - a2.getEnergy()));
 
                  int maxEnergy = animalsAtPosition[0].getEnergy();
-                 if (animalsAtPosition.length >= 2 && animalsAtPosition[0].getEnergy() > 1 && animalsAtPosition[1].getEnergy() > 1)
-                     place(new Animal(this, animalsAtPosition[0], animalsAtPosition[1]));
+                 if (animalsAtPosition.length >= 2 && animalsAtPosition[0].getEnergy() > 1 && animalsAtPosition[1].getEnergy() > 1) {
+                     Animal newKid = new Animal(this, animalsAtPosition[0], animalsAtPosition[1]);
+                     place(newKid);
+                     animalsAtPosition[0].linkChild(newKid); animalsAtPosition[1].linkChild(newKid);
+                 }
+
 
                  List<Animal> strongest = new ArrayList();
                  for (Animal a : animalsAtPosition) {
@@ -175,5 +182,11 @@ public class GrassFiled implements IPositionChangeObserver {
                  grass.remove(position);
              }
          }
-     }
+    }
+
+    public List<Animal> performMagic() {
+        if (!magicRuleOn) return null;
+        List<Animal> a = animals.values();
+        return (a.size() == 5)? a : null;
+    }
 }

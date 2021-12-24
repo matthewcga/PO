@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
@@ -15,19 +16,27 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Arrays;
 
 public class App extends Application implements IPositionChangeObserver {
 
     Stage stage;
     GridPane grid = new GridPane();
     GrassFiled map;
+    SimulationEngine engine;
+
+    ToggleButton button = new ToggleButton();
+    ToggleButton highLight = new ToggleButton();
 
     Chart animalCount = new Chart();
     Chart grassCount = new Chart();
-    Text avgDeadAge = new Text("brak danych");
-    Text avgEnergy = new Text("brak danych");
-    Text avgKids = new Text("brak danych");
+    Text stats = new Text("brak danych");
     Text bestGenome = new Text("brak danych");
+    String bestGenomeValue;
+
+    Animal selectedAnimal = null;
+    Text selectedInfo = new Text("nie wybrano stworka");
 
     Image grass = new Image(new FileInputStream("src/main/resources/grass.png"));
     Image grassJ = new Image(new FileInputStream("src/main/resources/grassJ.png"));
@@ -41,31 +50,41 @@ public class App extends Application implements IPositionChangeObserver {
     Image animal60J = new Image(new FileInputStream("src/main/resources/animal60J.png"));
     Image animal90 = new Image(new FileInputStream("src/main/resources/animal90.png"));
     Image animal90J = new Image(new FileInputStream("src/main/resources/animal90J.png"));
-    //Color empty = Color.LIGHTGREEN;
-    //Color jungle = Color.DARKGREEN;
-    int year = 0;
+    Image animalS = new Image(new FileInputStream("src/main/resources/animalS.png"));
+    Image animalSJ = new Image(new FileInputStream("src/main/resources/animalSJ.png"));
 
+    int day = 0;
 
+    Settings settings = new Settings();
 
     public App() throws FileNotFoundException { }
 
     public void start(Stage primaryStage) {
-        VBox vb = new VBox(); HBox hb = new HBox();
-        Scene scene = new Scene(vb, 1600, 1000); ToggleButton button = new ToggleButton(); //TextField tf = new TextField();
+        VBox vbOutput = new VBox(); HBox hbCharts = new HBox(); HBox hbOptions = new HBox(); VBox vbOptionsRow1 = new VBox(); VBox vbOptionsRow2 = new VBox();
+        Scene scene = new Scene(vbOutput, settings.windowWidth, settings.windowHeight);
+        Button resetSelected = new Button();
+        Button saveStats = new Button();
 
-
-        map = new GrassFiled(25, 15, false, 40); //new RectangularMap(20, 20);
-        SimulationEngine engine = new SimulationEngine(map, 50, 300,this, 20, button);
+        map = new GrassFiled(false, true);
+        engine = new SimulationEngine(map, this, button);
 
         grid = new GridPane();
         grid.setGridLinesVisible(true);
-        //grid.setPadding(new Insets(0, 0, 0, 0));
         stage = primaryStage;
 
-        button.setText("start/pause");
-        button.setOnAction(id -> { new Thread(engine).start(); });
-        hb.getChildren().addAll(grid, animalCount.lineChart, grassCount.lineChart);
-        vb.getChildren().addAll(hb, avgDeadAge, avgEnergy, avgKids, bestGenome, button);
+        button.setText("start/pauza"); resetSelected.setText("odznacz zwierze");
+        highLight.setText("zaznacz dom. genom"); saveStats.setText("zapisz statystyki");
+
+        button.setOnAction(e -> { new Thread(engine).start() });
+        resetSelected.setOnAction(e -> { selectedAnimal.stopTracking(); selectedAnimal = null; selectedInfo.setText("nie wybrano storka");});
+        //highLight.setOnAction(e -> {});
+        saveStats.setOnAction(e -> { try { engine.saveFile(); } catch (IOException ex) { ex.printStackTrace(); }});
+
+        vbOptionsRow1.getChildren().addAll(stats, bestGenome, selectedInfo);
+        vbOptionsRow2.getChildren().addAll(button, resetSelected, saveStats, highLight);
+        hbCharts.getChildren().addAll(animalCount.lineChart, grassCount.lineChart);
+        hbOptions.getChildren().addAll(vbOptionsRow2, vbOptionsRow1);
+        vbOutput.getChildren().addAll(grid, hbCharts, hbOptions);
         makeGrid();
         primaryStage.setScene(scene); primaryStage.show();
     }
@@ -118,15 +137,22 @@ public class App extends Application implements IPositionChangeObserver {
     }
 
     public void makeFiled(Vector2d position, int i, int j) {
-        if (map.isOccupiedByAnimal(position)) grid.add(new GuiElementBox(getAnimalImage(position, map.animalsAt(position).iterator().next().getEnergy())).vb, i, j, 1, 1);
+        if (map.isOccupiedByAnimal(position)) {
+            Animal a = map.animalsAt(position).iterator().next();
+            var vb = new GuiElementBox(getAnimalImage(position, a.getEnergy(), checkGenome(a))).vb;
+            vb.setOnMouseClicked(e -> { selectedAnimal = a; a.startTracking(); selectedInfo.setText(selectedAnimal.getTrackingInfo());});
+            grid.add(vb, i, j, 1, 1);
+        }
         else if (map.isOccupiedByGrass(position)) grid.add(new GuiElementBox(getGrassImage(position)).vb, i, j, 1, 1);
-        //else grid.add(new GuiElementBox(getEmptyImage(position)).vb, i, j, 1, 1);
+        else grid.add(new GuiElementBox(getEmptyImage(position)).vb, i, j, 1, 1);
     }
 
     @Override
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition) {
         Platform.runLater(() -> {
-            if (year % 10 == 0) {
+            if (day % 10 == 0) {
+                bestGenomeValue = map.getBestGenome();
+
                 Node node = grid.getChildren().get(0);
                 clearGrid();
                 grid.getChildren().add(node);
@@ -134,21 +160,28 @@ public class App extends Application implements IPositionChangeObserver {
 
                 animalCount.addData(map.getAnimals().size());
                 grassCount.addData(map.getGrass().size());
-                avgEnergy.setText("srednia energia: " + map.getAvgEng());
-                avgDeadAge.setText("sredni wiek smierci: " + map.getAvgAgeOfDeath());
-                avgKids.setText("srednia ilosc dzieci: " + map.getAvgKids());
-                bestGenome.setText("najpopularniejszy genotyp: " + map.getBestGenome());
+                stats.setText(engine.getStats());
+                bestGenome.setText("najpopularniejszy genotyp: " + bestGenomeValue);
+                if (selectedAnimal != null) selectedInfo.setText(selectedAnimal.getTrackingInfo());
             }
-            year++;
+            day++;
         });
     }
 
-    public Image getAnimalImage(Vector2d position, int energy) {
+    public Image getAnimalImage(Vector2d position, int energy, boolean selected) {
         boolean inJungle = map.inJungleBounds(position);
+        if (selected) return (inJungle)? animalSJ : animalS;
         if (energy <= 50) return (inJungle)? animal10J : animal10;
         if (energy <= 100) return (inJungle)? animal30J : animal30;
         if (energy <= 150) return (inJungle)? animal60J : animal60;
         else return (inJungle)? animal90J : animal90;
+    }
+
+    public boolean checkGenome(Animal a){
+        var l = Arrays.toString(a.getGenes());
+        var r = bestGenomeValue;
+        var isSlc = highLight.isSelected();
+        return isSlc && l.equals(r) ;
     }
 
     private Image getGrassImage(Vector2d position) { return (map.inJungleBounds(position))? grassJ : grass; }

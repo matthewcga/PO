@@ -12,37 +12,23 @@ import java.util.*;
 import javax.swing.JFileChooser;
 
 public class SimulationEngine implements Runnable{
-    private GrassFiled map;
-    private IPositionChangeObserver observer;
-    private int delay;
-    private Random rand = new Random();
-    private ToggleButton button;
-    int day = 0;
-    int animalEnergy;
-    int magicEvents;
-    StringBuilder data = new StringBuilder("-1; dzien, l. zwierzat, l. trawy, srednia energia, srednia wiek zgonu, srednia ilosc dzieci, na koncu wartosci usrednione;\n");
-
-    public int animalsCount, grassCount;
-    public float avgEng, avgAgeOfDeath, avgKids;
-
-    public int animalsCountSum, grassCountSum;
-    public float avgEngSum, avgAgeOfDeathSum, avgKidsSum;
-
-    public String name;
-
-    AppSettings.Settings settings;
+    private final GrassFiled map;
+    private final IPositionChangeObserver observer;
+    private final ToggleButton button;
+    private int day = 1, magicEvents = 0;
+    private StringBuilder data = new StringBuilder("-1; -1 - opis, -2 - wartosci usrednione, x > 0 - wartosci z dnia x, l. zwierzat, l. trawy, srednia energia, srednia wiek zgonu, srednia ilosc dzieci;\n");
+    private int animalsCount, grassCount, animalsCountSum, grassCountSum;
+    private float avgEng, avgAgeOfDeath, avgKids, avgEngSum, avgAgeOfDeathSum, avgKidsSum;
+    private String name;
 
     public SimulationEngine(String mapName, GrassFiled gf, IPositionChangeObserver obs, ToggleButton butt) {
-        name = mapName; map = gf; observer = obs; delay = settings.delay; button = butt; animalEnergy = settings.initAnimalEnergy;
+        name = mapName; map = gf; observer = obs; button = butt;
 
-        for (int i = 0; i < settings.initAnimalCount; i++) {
+        for (int i = 0; i < AppSettings.Settings.initAnimalCount; i++) {
             int failCount = 0;
             while (failCount < 30) {
-                Vector2d newPosition = new Vector2d(rand.nextInt(this.map.upperRight.x), rand.nextInt(this.map.upperRight.y));
-                if (!map.isOccupied(newPosition)) {
-                    map.place(new Animal(this.map, newPosition));
-                    break;
-                }
+                Vector2d newPosition = map.getRandomVector();
+                if (!map.isOccupied(newPosition)) { map.place(new Animal(map, newPosition)); break; }
                 failCount++;
             }
         }
@@ -51,34 +37,21 @@ public class SimulationEngine implements Runnable{
     @Override
     public void run() {
         while (button.isSelected()) {
-            day++;
-            map.growGrass();
-            map.eatGrassMakeKids();
-            map.killDead(day);
-
-            if (magicEvents < 3) {
-                List<Animal> a = map.performMagic();
-                if (a != null) {
-                    for (Animal clone : a)
-                        map.place(new Animal(this.map, new Vector2d(rand.nextInt(this.map.upperRight.x), rand.nextInt(this.map.upperRight.y)), clone));
-                    magicEvents++;
-                    System.out.println("mahia");
-                    // inform GUI !!!!!!!!!!!!!!!!
-                }
-            }
+            map.growGrass(); map.eatGrassMakeKids(); map.killDead(day);
+            if (magicEvents < 3) magicEventAction();
 
             Queue<Animal> animals = new LinkedList(map.getAnimals());
-            while (!animals.isEmpty()) {
-                Animal animal = animals.poll();
-                animal.move();
+            while (!animals.isEmpty()) animals.poll().move();
+
+            updateStats(); makeRow();
+
+            if (day % AppSettings.Settings.refreshRate == 0) {
+                observer.positionChanged(null, null);
+                try { Thread.sleep(AppSettings.Settings.delay); } catch (Exception ignored) { }
             }
-
-            updateStats();
-            makeRow();
-
-            observer.positionChanged(null, null);
-            if (delay > 0) try { Thread.sleep(delay); } catch (Exception ex) { }
+            day++;
         }
+
     }
 
     public String getStats() {
@@ -86,11 +59,15 @@ public class SimulationEngine implements Runnable{
                 + avgEng + ", sredni wiek zgonu " + avgAgeOfDeath + ", srednia ilosc dzieci " + avgKids;
     }
 
-    public void makeRow() { data.append(day + ";" + animalsCount + ";" + grassCount  + ";" + avgEng  + ";" + avgAgeOfDeath  + ";" + avgKids + ";\n"); }
+    public void makeRow() {
+        data.append(day).append(";").append(animalsCount).append(";").append(grassCount)
+            .append(";").append(avgEng).append(";").append(avgAgeOfDeath).append(";").append(avgKids).append(";\n");
+    }
 
     public void saveFile() throws IOException {
-        data.append("-2;" + animalsCountSum / day + ";" + grassCountSum / day + ";" + avgEngSum / day  + ";" +
-                avgAgeOfDeathSum / day  + ";" + avgKidsSum / day + ";\n");
+        data.append("-2;").append(animalsCountSum / day).append(";").append(grassCountSum / day)
+                .append(";").append(avgEngSum / day).append(";").append(avgAgeOfDeathSum / day)
+                .append(";").append(avgKidsSum / day).append(";\n");
 
         JFileChooser j = new JFileChooser();
         j.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -108,8 +85,16 @@ public class SimulationEngine implements Runnable{
     public void updateStats() {
         animalsCount = map.getAnimals().size(); grassCount = map.getGrass().size(); avgEng = map.getAvgEng();
         avgAgeOfDeath = map.getAvgAgeOfDeath(); avgKids = map.getAvgKids();
-
         animalsCountSum += animalsCount; grassCountSum += grassCount; avgEngSum += avgEng;
         avgAgeOfDeathSum += avgAgeOfDeath; avgKidsSum += avgKids;
     }
+
+    public void magicEventAction() {
+        List<Animal> a = map.performMagic();
+        if (a == null) return;
+        for (Animal clone : a) map.place(new Animal(this.map, map.getRandomVector(), clone));
+        magicEvents++;
+    }
+
+    public int getMagicEventsCount() { return magicEvents; }
 }

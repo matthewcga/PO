@@ -11,48 +11,32 @@ public class GrassFiled implements IPositionChangeObserver {
     protected Vector2d upperRightJungle;
     protected Vector2d lowerLeftJungle;
     protected int grassEnergySetting;
-    //protected MapBoundary mapBounder = new MapBoundary();
     protected boolean hasBorder, magicRuleOn;
 
     protected int deadCount = 0, deadAgeSum = 0, aliveEngSum, aliveChildSum;
 
-    AppSettings.Settings settings;
-
     public GrassFiled(boolean border, boolean magic) {
-        upperRight = new Vector2d(settings.mapSize, settings.mapSize);
-        lowerLeftJungle = new Vector2d((settings.mapSize - settings.jungleSize) / 2, (settings.mapSize - settings.jungleSize) / 2);
-        upperRightJungle = new Vector2d((settings.mapSize + settings.jungleSize) / 2, (settings.mapSize + settings.jungleSize) / 2);
+        upperRight = new Vector2d(AppSettings.Settings.mapSize - 1, AppSettings.Settings.mapSize - 1);
+        lowerLeftJungle = new Vector2d((int)Math.floor((AppSettings.Settings.mapSize - AppSettings.Settings.jungleSize) / 2), (int)Math.floor((AppSettings.Settings.mapSize - AppSettings.Settings.jungleSize) / 2));
+        upperRightJungle = new Vector2d((int)Math.ceil((AppSettings.Settings.mapSize + AppSettings.Settings.jungleSize) / 2), (int)Math.ceil((AppSettings.Settings.mapSize + AppSettings.Settings.jungleSize) / 2));
         hasBorder = border; magicRuleOn = magic;
         animals = new ListDictionary<>();
-        grassEnergySetting = settings.grassEnergy;
+        grassEnergySetting = AppSettings.Settings.grassEnergy;
         grass = new HashMap<>();
 
-        for(int i = 0; i < settings.initAnimalCount / 2; i++) growGrass();
+        for(int i = 0; i < AppSettings.Settings.initPlantCount / 2; i++) growGrass();
     }
 
-    public boolean place(Animal animal) {
-        if (!inBounds(animal.getPosition())) return false;
+    public void place(Animal animal) {
         animals.put(animal.getPosition(), animal);
-        //this.mapBounder.place(animal.getPosition());
         animal.addObserver(this);
-        //animal.addObserver(this.mapBounder);
-        return true;
     }
 
-    public Vector2d getLowerLeft() { return lowerLeft; } //{ return this.mapBounder.getLowerLeft(); }
-    public Vector2d getUpperRight() { return upperRight; } //{ return this.mapBounder.getUpperRight(); }
-    public Grass getGrassAt(Vector2d position) { return grass.get(position); }
-
+    public Vector2d getLowerLeft() { return lowerLeft; }
+    public Vector2d getUpperRight() { return upperRight; }
     public boolean isOccupied(Vector2d position) { return animals.containsKey(position) || grass.containsKey(position); }
     public boolean isOccupiedByAnimal(Vector2d position) { return animals.containsKey(position); }
     public boolean isOccupiedByGrass(Vector2d position) { return grass.containsKey(position); }
-
-    public Object objectAt(Vector2d position) {
-        if (!isOccupied(position)) return null;
-        else if (animals.containsKey(position)) return animals.get(position);
-        else return grass.get(position);
-    }
-    public Grass grassAt(Vector2d position) { return grass.get(position); }
     public HashSet<Animal> animalsAt(Vector2d position) { return animals.get(position); }
 
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition) { // assumes correct position is given
@@ -75,8 +59,8 @@ public class GrassFiled implements IPositionChangeObserver {
         int x, y;
         if (hasBorder)
         {
-            x = (position.x > upperRight.x)? upperRight.x : (position.x < lowerLeft.x)? lowerLeft.x : position.x;
-            y = (position.y > upperRight.y)? upperRight.y : (position.x < lowerLeft.y)? lowerLeft.y : position.y;
+            x = (position.x > upperRight.x)? upperRight.x : Math.max(position.x, lowerLeft.x);
+            y = (position.y > upperRight.y)? upperRight.y : Math.max(lowerLeft.y, position.y);
         }
         else {
             x = (position.x > upperRight.x)? position.x % upperRight.x : (position.x < lowerLeft.x)? upperRight.x - Math.abs(position.x) : position.x;
@@ -88,29 +72,21 @@ public class GrassFiled implements IPositionChangeObserver {
     public void growGrass() {
         int failCount = 0, failLimit = 10;
         while (failCount < failLimit) {
-            var newPosition = new Vector2d(rand.nextInt(upperRight.x + 1), rand.nextInt(upperRight.y + 1));
-            if (!isOccupied(newPosition) && !inJungleBounds(newPosition)) {
-                grass.put(newPosition, new Grass(newPosition, grassEnergySetting));
-                //this.mapBounder.place(newPosition);
-                break;
-            }
+            Vector2d newPosition = new Vector2d(rand.nextInt(upperRight.x + 1), rand.nextInt(upperRight.y + 1));
+            if (!isOccupied(newPosition) && !inJungleBounds(newPosition)) { grass.put(newPosition, new Grass()); break; }
             failCount++;
         }
 
         failCount = 0;
         while (failCount < failLimit) {
-            var newPosition = new Vector2d(rand.nextInt(upperRightJungle.x- lowerLeftJungle.x + 1) + lowerLeftJungle.x , rand.nextInt(upperRightJungle.y- lowerLeftJungle.y + 1) + lowerLeftJungle.y);
-            if (!isOccupied(newPosition)) {
-                grass.put(newPosition, new Grass(newPosition, grassEnergySetting));
-                //this.mapBounder.place(newPosition);
-                break;
-            }
+            Vector2d newPosition = new Vector2d(rand.nextInt(upperRightJungle.x- lowerLeftJungle.x + 1) + lowerLeftJungle.x , rand.nextInt(upperRightJungle.y- lowerLeftJungle.y + 1) + lowerLeftJungle.y);
+            if (!isOccupied(newPosition)) { grass.put(newPosition, new Grass()); break; }
             failCount++;
         }
     }
 
     public List<Animal> getAnimals() { return animals.values(); }
-    public List<Grass> getGrass() { return new LinkedList(grass.values()); }
+    public List<Grass> getGrass() { while(true) try { return grass.values().stream().toList(); } catch (Exception ignored){} }
     public float getAvgAgeOfDeath() { return (deadCount == 0)? 0 : Math.round((deadAgeSum / deadCount) * 100) / 100; }
     public float getAvgEng() {
         int count = getAnimals().size();
@@ -122,21 +98,21 @@ public class GrassFiled implements IPositionChangeObserver {
     }
     public String getBestGenome() {
         List<Animal> aliveAnimals =  getAnimals();
-        Map<String, Integer> genoms = new HashMap<>();
+        Map<String, Integer> genomes = new HashMap<>();
         int topScore = 0; String topGenome = "brak";
 
         if (aliveAnimals.size() == 0) return "wszystkie zwierzatka nie zyja!";
 
         for (Animal a : aliveAnimals) {
             String g = Arrays.toString(a.getGenes());
-            if (genoms.containsKey(g)) {
-                int score = genoms.get(g) + 1;
+            if (genomes.containsKey(g)) {
+                int score = genomes.get(g) + 1;
                 if (score > topScore) { topScore = score; topGenome = g; }
-                genoms.replace(g, score);
+                genomes.replace(g, score);
             }
-            else genoms.put(g, 1);
+            else genomes.put(g, 1);
         }
-        return (topScore != 0)? topGenome : genoms.keySet().iterator().next();
+        return (topScore != 0)? topGenome : genomes.keySet().iterator().next();
     }
 
     public void killDead(int day) {
@@ -178,8 +154,8 @@ public class GrassFiled implements IPositionChangeObserver {
                      if (a.getEnergy() != maxEnergy) break;
                  }
 
-                 int devidedEnergy = grassAt(position).getEnergy() / strongest.size();
-                 for (Animal a : strongest) a.addEnergy(devidedEnergy);
+                 int dividedEnergy = AppSettings.Settings.grassEnergy / strongest.size();
+                 for (Animal a : strongest) a.addEnergy(dividedEnergy);
                  grass.remove(position);
              }
          }
@@ -190,4 +166,6 @@ public class GrassFiled implements IPositionChangeObserver {
         List<Animal> a = animals.values();
         return (a.size() == 5)? a : null;
     }
+
+    public Vector2d getRandomVector() { return new Vector2d(rand.nextInt(upperRight.x), rand.nextInt(upperRight.y)); }
 }

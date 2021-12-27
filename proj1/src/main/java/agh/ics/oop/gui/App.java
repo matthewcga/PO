@@ -1,34 +1,41 @@
 package agh.ics.oop.gui;
 
-import agh.ics.oop.*;
+import agh.ics.oop.AppSettings;
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.*;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
+
 import java.io.FileNotFoundException;
 
 public class App extends Application {
-    AppSettings.Settings settings;
 
-    public void start(Stage primaryStage) throws FileNotFoundException {
-        VBox ui = new VBox();
-        HBox output = new HBox();
+    public void start(Stage primaryStage) {
+        GridPane ui = new GridPane();
+        ui.setAlignment(Pos.CENTER);
+        Scene scene = new Scene(ui, AppSettings.Settings.windowWidth, AppSettings.Settings.windowHeight);
 
-        Scene scene = new Scene(ui, settings.windowWidth, settings.windowHeight);
-        UniverseEngine left = new UniverseEngine(false, settings.isMagicOn, "lewa");
-        UniverseEngine right = new UniverseEngine(true, settings.isMagicOn, "prawa");
-
+        SettingsImporter si = new SettingsImporter();
         Button starter = new Button();
-        starter.setText("wczytaj ustawienia");
-        starter.setOnAction(e -> {ui.getChildren().addAll(output);});
+        starter.setText("wczytaj ustawienia i rozpocznij symulacje");
+        starter.setOnAction(e -> {
+            try {
+                if (si.ImportSettings().length() != 0) return;
 
-        Button exitButton = new Button();
-        exitButton.setText("wyjdz");
-        exitButton.setOnAction(e -> {System.exit(0);});
+                GridPane gird = new GridPane();
+                gird.setAlignment(Pos.CENTER); gird.setHgap(10); gird.setVgap(10);
+                gird.add(new UniverseEngine(false, "lewa").getUniverse(), 0, 0);
+                gird.add(new UniverseEngine(true, "prawa").getUniverse(), 1, 0);
 
-        ui.getChildren().addAll(starter, exitButton);
-        output.getChildren().addAll(left.getUniverse(), right.getUniverse());
+                ui.getChildren().remove(si.getSettingsUI()); ui.getChildren().remove(starter);
+                ui.getChildren().add(gird);
+            }
+            catch (FileNotFoundException ex) { ex.printStackTrace(); }
+        });
+
+        ui.add(starter, 0, 0); ui.add(si.getSettingsUI(), 0, 1);
         primaryStage.setScene(scene); primaryStage.show();
     }
 }

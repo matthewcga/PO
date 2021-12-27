@@ -1,11 +1,12 @@
 package agh.ics.oop;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ListDictionary<K, T> {
     protected Map<K, HashSet<T>> dict;
 
-    ListDictionary() { dict = new HashMap<>(); }
+    public ListDictionary() { dict = new HashMap<>(); }
 
     public void put(K key, T value) {
         if (dict.containsKey(key)) {
@@ -31,12 +32,6 @@ public class ListDictionary<K, T> {
         else dict.remove(key);
     }
 
-    public List<T> values() {
-        List<T> output = new LinkedList<>();
-        Collection<HashSet<T>> lists= dict.values();
-        for (HashSet<T> list : lists) output.addAll(list);
-        return output;
-    }
-
+    public List<T> values() { while (true) try { return dict.values().stream().flatMap(Collection::stream).collect(Collectors.toList()); } catch (Exception ignored) { }}
     public Set<K> keys() { return dict.keySet(); }
 }

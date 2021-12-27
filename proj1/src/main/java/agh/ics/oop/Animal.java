@@ -6,26 +6,22 @@ public class Animal{
     private final Random rand = new Random();
     private int direction;
     private Vector2d position;
-    private int[] genes;
-    private GrassFiled map;
+    private final int[] genes;
+    private final GrassFiled map;
     private int energy;
     private int age = 1;
-    private List<IPositionChangeObserver> observers;
+    private final List<IPositionChangeObserver> observers;
 
-    private Boolean isTracked = false;
-    private int trackedKids = 0;
     private boolean isDead = false;
     private List<Animal> kids = new ArrayList();
     private int dayOfDeath;
-
-    AppSettings.Settings settings;
 
     public Animal(GrassFiled wm, Vector2d initialPosition) {
         direction = rand.nextInt(8);
         position = initialPosition;
         map = wm;
         observers = new ArrayList<>();
-        energy = settings.initAnimalEnergy;
+        energy = AppSettings.Settings.initAnimalEnergy;
 
         genes = new int[32];
         for (int i = 0; i < 32; i++) genes[i] = rand.nextInt(8);
@@ -41,14 +37,14 @@ public class Animal{
 
         genes = new int[32];
         if (rand.nextBoolean()) {
-            int index = (int) ((ma.energy / (ma.energy + pa.energy)) * 32);
-            for (int i = 0; i < index; i++) genes[i] = ma.genes[i];
-            for (int i = index; i < 32; i++) genes[i] = pa.genes[i];
+            int index = (ma.energy / (ma.energy + pa.energy)) * 32;
+            System.arraycopy(ma.genes, 0, genes, 0, index);
+            System.arraycopy(pa.genes, index, genes, index, 32 - index);
         }
         else {
-            int index = (int) ((pa.energy / (ma.energy + pa.energy)) * 32);
-            for (int i = 0; i < index; i++) genes[i] = pa.genes[i];
-            for (int i = index; i < 32; i++) genes[i] = ma.genes[i];
+            int index = (pa.energy / (ma.energy + pa.energy)) * 32;
+            System.arraycopy(pa.genes, 0, genes, 0, index);
+            System.arraycopy(ma.genes, index, genes, index, 32 - index);
         }
         Arrays.sort(genes);
     }
@@ -58,7 +54,7 @@ public class Animal{
         position = initialPosition;
         map = wm;
         observers = donor.getObservers();
-        energy = settings.initAnimalEnergy;
+        energy = AppSettings.Settings.initAnimalEnergy;
         genes = donor.getGenes();
     }
 
@@ -66,20 +62,18 @@ public class Animal{
         var newDirection = this.genes[rand.nextInt(32)];
         if (newDirection == 0 || newDirection == 4) {
             updatePosition(map.fixVector(position.pushVector(direction)));
-            energy -= settings.energyLoss;
+            energy -= AppSettings.Settings.energyLoss;
         }
         direction = (direction + newDirection) % 8; age++;
     }
 
     public int makeChild() {
-        trackedKids++;
         int energyForKid = (int)(energy * 0.25);
         energy = (int)(energy * 0.75);
         return energyForKid;
     }
 
-    public void linkChild(Animal child) { if (isTracked) kids.add(child); }
-    public int getDirection() { return direction; }
+    public void linkChild(Animal child) { kids.add(child); }
     public Vector2d getPosition() { return position; }
     public int getEnergy() { return energy; }
     public void addEnergy(int e) { energy += e; }
@@ -108,16 +102,14 @@ public class Animal{
     @Override
     public String toString() { return "A"; }
 
-    public void startTracking() { isTracked = true; }
-
-    public void stopTracking() { isTracked = false; trackedKids = 0; kids = new ArrayList(); }
+    public void resetKidsList() { kids = new ArrayList(); }
 
     public String getTrackingInfo() {
-        return "zwierze (id): " + this.hashCode() +
-                ", dzieci: " + getKidsCount() +
+        return "zwierze (id): '" + this.hashCode() +
+                "', dzieci: " + getKidsCount() +
                 ", potomkowie: " + getSuccessorsCount() +
-                ", energia: " + energy +
-                ", genom: " + Arrays.toString(genes) +
-                ((isDead)? ", zmarlo w " + dayOfDeath + " dniu majac " + age + " dni": ", wiek: " + age);
+                ", energia: " + energy + "\n" +
+                "genom: " + Arrays.toString(genes) + "\n" +
+                ((isDead)? "zmarlo w " + dayOfDeath + " dniu majac " + age + " dni": "wiek: " + age);
     }
 }

@@ -74,7 +74,7 @@ public class UniverseEngine implements IPositionChangeObserver {
         Button saveStats = new Button();
 
         tileSize = Math.min(AppSettings.Settings.windowHeight / (2 * AppSettings.Settings.mapSize), 40);
-        map = new GrassFiled(border, AppSettings.Settings.isMagicOn);
+        map = new GrassFiled(border);
         engine = new SimulationEngine(mapName, map, this, playButton);
 
         playButton.setText("start");

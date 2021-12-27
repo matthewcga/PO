@@ -15,11 +15,11 @@ public class GrassFiled implements IPositionChangeObserver {
 
     protected int deadCount = 0, deadAgeSum = 0, aliveEngSum, aliveChildSum;
 
-    public GrassFiled(boolean border, boolean magic) {
+    public GrassFiled(boolean border) {
         upperRight = new Vector2d(AppSettings.Settings.mapSize - 1, AppSettings.Settings.mapSize - 1);
         lowerLeftJungle = new Vector2d((int)Math.floor((AppSettings.Settings.mapSize - AppSettings.Settings.jungleSize) / 2), (int)Math.floor((AppSettings.Settings.mapSize - AppSettings.Settings.jungleSize) / 2));
         upperRightJungle = new Vector2d((int)Math.ceil((AppSettings.Settings.mapSize + AppSettings.Settings.jungleSize) / 2), (int)Math.ceil((AppSettings.Settings.mapSize + AppSettings.Settings.jungleSize) / 2));
-        hasBorder = border; magicRuleOn = magic;
+        hasBorder = border;
         animals = new ListDictionary<>();
         grassEnergySetting = AppSettings.Settings.grassEnergy;
         grass = new HashMap<>();
@@ -86,7 +86,7 @@ public class GrassFiled implements IPositionChangeObserver {
     }
 
     public List<Animal> getAnimals() { return animals.values(); }
-    public List<Grass> getGrass() { while(true) try { return grass.values().stream().toList(); } catch (Exception ignored){} }
+    public List<Grass> getGrass() { while(true) try { return new LinkedList(grass.values()); } catch (Exception ignored){} }
     public float getAvgAgeOfDeath() { return (deadCount == 0)? 0 : Math.round((deadAgeSum / deadCount) * 100) / 100; }
     public float getAvgEng() {
         int count = getAnimals().size();

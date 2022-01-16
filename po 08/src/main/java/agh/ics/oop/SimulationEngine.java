@@ -27,7 +27,7 @@ public class SimulationEngine implements IEngine, Runnable{
             if (this.observer != null) this.observer.positionChanged(oldPosition, newPosition);
             counter = (counter + 1) % positions.length;
 
-            //try { Thread.sleep(300); } catch (Exception ex) {}
+            try { Thread.sleep(300); } catch (Exception ex) {}
         }
     }
     

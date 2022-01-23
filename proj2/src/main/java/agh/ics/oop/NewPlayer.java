@@ -1,7 +1,6 @@
 package agh.ics.oop;
 
 import javafx.util.Pair;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,9 +11,6 @@ public class NewPlayer {
     private static boolean canSave;
     private final Stats stats = new Stats();
 
-    public static String getNick() { return nick; }
-    public static Integer getScore() { return score; }
-
     public NewPlayer(String nickName) {
         nick = nickName;
         score = 0;
@@ -23,6 +19,9 @@ public class NewPlayer {
         canSave = true;
     }
 
+    public static String getNick() { return nick; }
+    public static Integer getScore() { return score; }
+    public Stats getStats() { return stats; }
     public static List<Pair<Integer, Boolean>> GetHistory() { return history; }
     public static void disableSave() { canSave = false; }
     public static boolean getCanSave() { return canSave; }
@@ -33,5 +32,4 @@ public class NewPlayer {
         return stats.UpdateStats(card.getStats(move));
     }
 
-    public Stats getStats() { return stats; }
 }

@@ -4,12 +4,13 @@ import agh.ics.oop.Card;
 import agh.ics.oop.CardsLibrary;
 import agh.ics.oop.NewPlayer;
 import agh.ics.oop.Stats;
+import agh.ics.oop.style.StyledButton;
+import agh.ics.oop.style.StyledText;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -17,17 +18,21 @@ import java.util.List;
 import java.util.Queue;
 import java.util.stream.IntStream;
 
+import static agh.ics.oop.ImageLibrary.*;
+import static agh.ics.oop.World.CatchException;
+
 public class GameVM {
     private final VBox gameVM = new VBox();
-    private final Button accept = new Button();
-    private final Button reject = new Button();
+    private final StyledButton accept = new StyledButton();
+    private final StyledButton reject = new StyledButton();
     private final CardVM cardVM = new CardVM();
 
-    private final Text armyScore = new Text();
-    private final Text goldScore = new Text();
-    private final Text foodScore = new Text();
-    private final Text techScore = new Text();
-    private final Text score = new Text();
+    private final ProgressBar armyBar = new ProgressBar();
+    private final ProgressBar goldBar = new ProgressBar();
+    private final ProgressBar foodBar = new ProgressBar();
+    private final ProgressBar techBar = new ProgressBar();
+
+    private final StyledText score = new StyledText(null);
 
     private final Queue<Integer> cardsQueue;
     private final NewPlayer player;
@@ -40,11 +45,16 @@ public class GameVM {
         player = newPlayer;
         cardsQueue = new LinkedList<>(MakeCardsList());
 
+        armyBar.setId("bar");
+        goldBar.setId("bar");
+        foodBar.setId("bar");
+        techBar.setId("bar");
+
         HBox stats = new HBox();
         stats.setAlignment(Pos.CENTER);
         stats.setPadding(new Insets(10, 10, 10, 10));
         stats.setSpacing(10);
-        stats.getChildren().addAll(armyScore, goldScore, foodScore, techScore, score);
+        stats.getChildren().addAll(armyIcon, armyBar, goldIcon, goldBar, foodIcon, foodBar, techIcon, techBar, score);
 
         accept.setOnAction(e -> MakeMove(true));
         reject.setOnAction(e ->  MakeMove(false));
@@ -71,10 +81,13 @@ public class GameVM {
     }
 
     private void GetNewCard() {
-        card = CardsLibrary.GetCard(cardsQueue.poll());
-        cardVM.updateCardVM(card);
-        accept.setText(card.getAccept());
-        reject.setText(card.getReject());
+        try {
+            card = CardsLibrary.GetCard(cardsQueue.poll());
+            cardVM.updateCardVM(card);
+            accept.setText(card.getAccept());
+            reject.setText(card.getReject());
+        }
+        catch (Exception ex) { CatchException(ex); }
     }
 
     public VBox GetGameVM() { return gameVM; }
@@ -87,10 +100,12 @@ public class GameVM {
 
     private void UpdateStats() {
         Stats stats = player.getStats();
-        armyScore.setText("Army " + stats.getArmy() + "/100");
-        goldScore.setText("Gold " + stats.getGold() + "/100");
-        foodScore.setText("Food " + stats.getFood() + "/100");
-        techScore.setText("Tech " + stats.getTech() + "/100");
-        score.setText("Score " + player.getScore());
+
+        armyBar.setProgress(stats.getArmy() / 100.0);
+        goldBar.setProgress(stats.getGold() / 100.0);
+        foodBar.setProgress(stats.getFood() / 100.0);
+        techBar.setProgress(stats.getTech() / 100.0);
+
+        score.setText("Wynik: " + NewPlayer.getScore());
     }
 }

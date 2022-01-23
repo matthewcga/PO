@@ -4,5 +4,6 @@ module oolab.main {
   requires javafx.base;
 
     opens agh.ics.oop;
-  opens agh.ics.oop.gui;
+    opens agh.ics.oop.gui;
+    opens agh.ics.oop.style;
 }

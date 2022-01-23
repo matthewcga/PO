@@ -10,10 +10,7 @@ public class ScoreBoard {
 
     public static void LoadPlayersMap() throws IOException {
         try(BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/ScoreBoard.csv"))) {
-            for(String line; (line = reader.readLine()) != null;) {
-                Player player = new Player(line.split(";"));
-                players.add(player);
-            }
+            for(String line; (line = reader.readLine()) != null;) players.add(new Player(line.split(";")));
         }
         Collections.sort(players, Collections.reverseOrder());
     }

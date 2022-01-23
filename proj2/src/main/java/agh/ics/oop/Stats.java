@@ -12,6 +12,7 @@ public class Stats {
         tech = Integer.parseInt(line[3]);
     }
 
+    public void ClearStats() { army = 50; gold = 50; food = 50; tech = 50; }
     public int getArmy() { return army; }
     public int getGold() { return gold; }
     public int getFood() { return food; }
@@ -24,6 +25,4 @@ public class Stats {
         tech = Math.min(tech + stats.getTech(), 100);
         return army > 0 && gold > 0 && food > 0 && tech > 0;
     }
-
-    public void ClearStats() { army = 50; gold = 50; food = 50; tech = 50; }
 }

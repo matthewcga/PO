@@ -1,26 +1,29 @@
 package agh.ics.oop.gui;
 
 import agh.ics.oop.*;
+import agh.ics.oop.style.StyledButton;
+import agh.ics.oop.style.StyledText;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
+import java.io.File;
 import java.io.IOException;
+
+import static agh.ics.oop.ImageLibrary.gameLogo;
+import static agh.ics.oop.World.CatchException;
 
 public class App extends Application {
     private final VBox ui = new VBox();
-    private final Button newGame = new Button();
-    private final Button scoreBoard = new Button();
-    private final Button endGameScoreBoard = new Button();
-    private final Button menu = new Button();
-    private final Button endGameMenu = new Button();
-    private final Button history = new Button();
-    private final Button saveScore = new Button();
+    private final StyledButton newGame = new StyledButton();
+    private final StyledButton scoreBoard = new StyledButton();
+    private final StyledButton endGameScoreBoard = new StyledButton();
+    private final StyledButton menu = new StyledButton(50);
+    private final StyledButton endGameMenu = new StyledButton(50);
+    private final StyledButton history = new StyledButton();
+    private final StyledButton saveScore = new StyledButton();
     private final ScoreBoardVM scoreBoardVM = new ScoreBoardVM();
     private final MoveHistoryVM moveHistoryVM = new MoveHistoryVM();
 
@@ -30,61 +33,63 @@ public class App extends Application {
         ui.setSpacing(10);
         SetButtonsActions();
         MakeMenu();
-        Scene scene = new Scene(ui, 500, 700);
+
+        Scene scene = new Scene(ui, 700, 700);
+        scene.getStylesheets().add(new File("src/main/resources/style.css").toURI().toASCIIString());
         primaryStage.setScene(scene); primaryStage.show();
     }
 
     private void SetButtonsActions() {
-        newGame.setText("new game");
+        newGame.setText("Nowa gra");
         newGame.setOnAction(e -> {
             NewPlayerVM newPlayerVM = new NewPlayerVM(this);
             ui.getChildren().clear();
             ui.getChildren().addAll(menu, newPlayerVM.GetNewPlayerVM());
         });
 
-        scoreBoard.setText("score board");
+        scoreBoard.setText("Wyniki");
         scoreBoard.setOnAction(e -> {
             ui.getChildren().clear();
-            ui.getChildren().addAll(menu, scoreBoardVM.GetScoreBoardVM());
+            ui.getChildren().addAll(menu, scoreBoardVM.GetScrollableVM());
         });
 
-        endGameScoreBoard.setText("score board");
+        endGameScoreBoard.setText("Wyniki");
         endGameScoreBoard.setOnAction(e -> {
             ui.getChildren().clear();
-            ui.getChildren().addAll(endGameMenu, saveScore, scoreBoardVM.GetScoreBoardVM());
+            ui.getChildren().addAll(endGameMenu, saveScore, scoreBoardVM.GetScrollableVM());
             saveScore.setDisable(!NewPlayer.getCanSave());
         });
 
-        menu.setText("return");
+        menu.setText("<");
         menu.setOnAction(e -> MakeMenu());
 
-        endGameMenu.setText("return");
+        endGameMenu.setText("<");
         endGameMenu.setOnAction(e -> MakeEndGameMenu());
 
-        history.setText("history");
+        history.setText("Historia");
         history.setOnAction(e -> {
             ui.getChildren().clear();
-            ui.getChildren().addAll(endGameMenu, moveHistoryVM.GetMoveHistoryVM());
+            ui.getChildren().addAll(endGameMenu, moveHistoryVM.GetScrollableVM());
         });
 
-        saveScore.setText("save score");
+        saveScore.setText("Zapisz");
         saveScore.setOnAction(e -> {
             try { ScoreBoard.AddNewPlayer();}
-            catch (IOException ex) { System.out.println(ex.getMessage()); ex.printStackTrace(); System.exit(1); }
-            scoreBoardVM.refreshScoreBoard();
+            catch (IOException ex) { CatchException(ex); }
+            scoreBoardVM.refreshScrollable();
             saveScore.setDisable(!NewPlayer.getCanSave());
         });
     }
 
     private void MakeMenu() {
         ui.getChildren().clear();
-        ui.getChildren().addAll(new Text("GAME TITLE"), newGame, scoreBoard);
+        ui.getChildren().addAll(gameLogo, newGame, scoreBoard);
     }
 
     private void MakeEndGameMenu() {
         String score = NewPlayer.getScore() + "/" + CardsLibrary.GetCardsAmount();
         ui.getChildren().clear();
-        ui.getChildren().addAll(new Text((NewPlayer.getScore() == CardsLibrary.GetCardsAmount())? "YOU WON " + score: "GAME OVER " + score), menu, endGameScoreBoard, history);
+        ui.getChildren().addAll(new StyledText((NewPlayer.getScore() == CardsLibrary.GetCardsAmount())? "Wygrana! Wynik:" + score: "Przegrana! Wynik:" + score), menu, endGameScoreBoard, history);
     }
 
     public void GameStart(String nick) {
@@ -93,7 +98,7 @@ public class App extends Application {
     }
 
     public void GameEnd() {
-        moveHistoryVM.refreshMoveHistory();
+        moveHistoryVM.refreshScrollable();
         MakeEndGameMenu();
     }
 }
